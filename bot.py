@@ -1,11 +1,16 @@
+# pip install python-telegram-bot
+# pip install pytz
+# python bot.py
+
 import logging
 from datetime import datetime, timedelta
 import pytz
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, CallbackContext
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+import asyncio
 
 # Replace 'YOUR_BOT_TOKEN' with your actual bot token
-BOT_TOKEN = 'YOUR_BOT_TOKEN'
+BOT_TOKEN = '7490917900:AAEZ_jIe_I1tcM2PpvdjA_dtc7o6-PoCA40'
 
 # Enable logging
 logging.basicConfig(
@@ -26,47 +31,62 @@ def get_indian_time_with_offset(offset_seconds):
     new_time = current_time + timedelta(seconds=offset_seconds)
     
     # Format the new time as a string
-    formatted_time = new_time.strftime('%Y-%m-%d %H:%M:%S %Z')
+    formatted_time = new_time.strftime('%Y-%m-%d %I:%M:%S %p %Z')  # 12-hour format
     
     return formatted_time
 
-def process_command(update: Update, context: CallbackContext) -> None:
+async def process_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_name = update.effective_user.first_name
     # Get the command arguments
     command_args = context.args
     
     # Check if the command has enough parts
     if len(command_args) < 4:
-        update.message.reply_text("Invalid command. Use: /bgmi <target> <port> <time> <threads>")
+        await update.message.reply_text(f"{user_name},\n𝐈𝐧𝐯𝐚𝐥𝐢𝐝 𝐜𝐨𝐦𝐦𝐚𝐧𝐝.\nUse: /ddos <target> <port> <time> <threads>")
         return
     
     # Extract the time part and convert it to an integer
     try:
         offset_seconds = int(command_args[2])
     except ValueError:
-        update.message.reply_text("Invalid time format. Time should be an integer representing seconds.")
+        await update.message.reply_text(f"{user_name},\n𝙄𝙣𝙫𝙖𝙡𝙞𝙙 𝙩𝙞𝙢𝙚 𝙛𝙤𝙧𝙢𝙖𝙩. 𝙏𝙞𝙢𝙚 𝙨𝙝𝙤𝙪𝙡𝙙 𝙗𝙚 𝙖𝙣 𝙞𝙣𝙩𝙚𝙜𝙚𝙧 𝙧𝙚𝙥𝙧𝙚𝙨𝙚𝙣𝙩𝙞𝙣𝙜 𝙨𝙚𝙘𝙤𝙣𝙙𝙨.")
         return
     
-    # Get the current Indian time with the offset
-    response_time = get_indian_time_with_offset(offset_seconds)
+    # Adjust the offset by subtracting 10 seconds
+    adjusted_offset_seconds = offset_seconds - 10
+    
+    # Get the current Indian time with the adjusted offset
+    response_time = get_indian_time_with_offset(adjusted_offset_seconds)
+    
+    # Introduce a 10-second delay before sending the reply
+    await asyncio.sleep(10)
     
     # Reply with the calculated time
-    update.message.reply_text(f"Current Indian time plus {offset_seconds} seconds is: {response_time}")
+    await update.message.reply_text(f"{user_name},\n𝐒𝐭𝐫𝐢𝐤𝐞 𝐰𝐢𝐥𝐥 𝐞𝐧𝐝 𝐨𝐧 \n{response_time}")
+
+    Warning_offset_seconds = adjusted_offset_seconds - 10
+
+    await asyncio.sleep(Warning_offset_seconds)
+
+    await update.message.reply_text(f"{user_name},\n𝐒𝐭𝐫𝐢𝐤𝐞 𝐰𝐢𝐥𝐥 𝐞𝐧𝐝 𝐢𝐧 10 𝙨𝙚𝙘𝙤𝙣𝙙𝙨.")
+
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    user_name = update.effective_user.first_name
+    response = f'''𝐖𝐞𝐥𝐜𝐨𝐦𝐞, {user_name} 
+𝑰 𝒕𝒂𝒌𝒆 𝒂 𝒄𝒐𝒎𝒎𝒂𝒏𝒅 𝒘𝒊𝒕𝒉 𝒔𝒆𝒗𝒆𝒓𝒂𝒍 𝒑𝒂𝒓𝒂𝒎𝒆𝒕𝒆𝒓𝒔 𝒂𝒏𝒅 𝒓𝒆𝒔𝒑𝒐𝒏𝒅 𝒘𝒊𝒕𝒉 𝒕𝒉𝒆 𝒄𝒂𝒍𝒄𝒖𝒍𝒂𝒕𝒆𝒅 𝒕𝒊𝒎𝒆 𝒂𝒇𝒕𝒆𝒓 𝒂 𝒃𝒓𝒊𝒆𝒇 𝒅𝒆𝒍𝒂𝒚.'''
+    await update.message.reply_text(response)
 
 def main():
-    # Create the Updater and pass it your bot's token
-    updater = Updater(BOT_TOKEN)
+    # Create the Application and pass it your bot's token
+    application = ApplicationBuilder().token(BOT_TOKEN).build()
     
-    # Get the dispatcher to register handlers
-    dispatcher = updater.dispatcher
-    
-    # Register the command handler
-    dispatcher.add_handler(CommandHandler("bgmi", process_command))
+    # Register the command handlers
+    application.add_handler(CommandHandler("ddos", process_command))
+    application.add_handler(CommandHandler("start", start))
     
     # Start the Bot
-    updater.start_polling()
-    
-    # Run the bot until you press Ctrl-C or the process receives SIGINT, SIGTERM or SIGABRT
-    updater.idle()
+    application.run_polling()
 
 if __name__ == '__main__':
     main()
